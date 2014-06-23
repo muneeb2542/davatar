@@ -129,9 +129,15 @@ class FaviconParser(HTMLParser.HTMLParser):
 
         # Make sure image exists, gravatar doesn't like being served 404's
         try:
-            resp = requests.get(self.url)
+            resp = requests.get(self.url, stream=True)
             if resp.status_code != 200:
                 self.url =''
+            magic = resp.raw.read(4)
+            if magic not in ('\x89PNG', 'GIF8', '\xff\xd8\xff\xe0'):
+                if self.url.endswith('.ico'):
+                    self.url = 'http://www.google.com/s2/favicons?domain=%s' % self.domain
+                else:
+                    self.url = ''
         except requests.ConnectionError:
             self.url =''
 
